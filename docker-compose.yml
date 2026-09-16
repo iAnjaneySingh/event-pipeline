@@ -1,0 +1,42 @@
+version: "3.8"
+
+services:
+  redpanda:
+    image: redpandadata/redpanda:v23.3.5
+    command:
+      - redpanda
+      - start
+      - --smp=1
+      - --memory=512M
+      - --overprovisioned
+      - --node-id=0
+      - --check=false
+      - --kafka-addr=PLAINTEXT://0.0.0.0:9092
+      - --advertise-kafka-addr=PLAINTEXT://redpanda:9092
+    ports:
+      - "9092:9092"
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6380:6379"
+
+  producer:
+    build: .
+    command: python scripts/produce_sample_events.py
+    depends_on:
+      - redpanda
+    environment:
+      - KAFKA_BOOTSTRAP=redpanda:9092
+
+  consumer:
+    build: .
+    command: python -m pipeline.consumer
+    depends_on:
+      - redpanda
+      - redis
+    environment:
+      - KAFKA_BOOTSTRAP=redpanda:9092
+      - REDIS_URL=redis://redis:6379/0
+    deploy:
+      replicas: 2   # demonstrates consumer-group rebalancing across partitions
