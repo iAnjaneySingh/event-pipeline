@@ -7,7 +7,7 @@ production, not just the publish/subscribe happy path.
 
 ## What it handles
 
-- **Idempotent producing** — `enable.idempotence=True` so broker-level retry
+- **Idempotent producing**- `enable.idempotence=True` so broker-level retry
   on a transient network blip can't create a duplicate write
 - **Ordering per key** — events are keyed by `order_id`, so all events for one
   order land on the same partition and are processed in order
